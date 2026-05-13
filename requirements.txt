@@ -10,3 +10,6 @@ flask
 flask-cors
 langchain-ollama
 langgraph-checkpoint
+pytest 
+selenium 
+webdriver-manager

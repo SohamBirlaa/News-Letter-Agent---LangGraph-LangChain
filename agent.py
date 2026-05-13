@@ -18,6 +18,7 @@ from prompts import (
 from langgraph.checkpoint.memory import MemorySaver
 import uuid
 
+""" ---> no need of google api as we are using local ollama llama 3.2 llm
 #=========================
 # Load environment variables
 #=========================
@@ -27,7 +28,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY is missing in .env file")
-
+"""
 
 #=====================
 # Logging Configuration
