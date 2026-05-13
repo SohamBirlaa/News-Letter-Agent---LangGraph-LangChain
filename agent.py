@@ -18,6 +18,8 @@ from prompts import (
 from langgraph.checkpoint.memory import MemorySaver
 import uuid
 
+from langchain_groq import ChatGroq
+
 """ ---> no need of google api as we are using local ollama llama 3.2 llm
 #=========================
 # Load environment variables
@@ -45,10 +47,23 @@ logger = logging.getLogger(__name__)
 #===================
 # LLM Initialization
 #===================
-
+""" 
 llm = ChatOllama(
     model="llama3.2",
     temperature=0.3,
+)
+""" 
+## -----> now i am using grok api
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is missing in .env file")
+
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.3,
+    api_key=GROQ_API_KEY,
 )
 
 

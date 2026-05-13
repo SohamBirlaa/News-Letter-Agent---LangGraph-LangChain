@@ -13,3 +13,4 @@ langgraph-checkpoint
 pytest 
 selenium 
 webdriver-manager
+langchain-groq
