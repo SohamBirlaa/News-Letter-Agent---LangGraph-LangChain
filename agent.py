@@ -5,7 +5,7 @@ from typing import TypedDict, Optional, Literal
 
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
-from langchain_ollama import ChatOllama
+#from langchain_ollama import ChatOllama
 
 from tools import search_ai_news, save_newsletter
 from prompts import (
