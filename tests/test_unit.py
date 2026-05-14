@@ -330,7 +330,8 @@ class TestSafeLlmCall:
       up the mock via normal method resolution order.
     """
 
-    LLM_PATH = "langchain_ollama.chat_models.ChatOllama.invoke"
+    #LLM_PATH = "langchain_ollama.chat_models.ChatOllama.invoke"
+    LLM_PATH = "langchain_groq.chat_models.ChatGroq.invoke"
 
     def test_returns_stripped_content(self):
         """safe_llm_call() should strip whitespace from LLM response."""
