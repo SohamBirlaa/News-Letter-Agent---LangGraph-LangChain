@@ -135,7 +135,9 @@ def research(state: AgentState):
     logger.info("Running Research Node")
 
     try:
-        news = search_ai_news("latest AI agents news 2025")
+        #news = search_ai_news("latest AI agents news 2025") ---> i did blunder i hard coded it so it only genrate LATEST AI NEWS , now it can genrate any news enter in as the quesry 
+        goal = state.get("goal", "latest news 2025")
+        news = search_ai_news(goal)
 
         if not news:
             raise ValueError("No news found")
