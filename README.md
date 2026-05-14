@@ -1,7 +1,14 @@
 # 📰 Newsletter Agent
 
-> An autonomous AI agent that researches, writes, critiques, and publishes newsletters — with a Human-in-the-Loop approval gate.
+> An autonomous AI agent that researches, writes, critiques, and publishes newsletters — with a Human-in-the-Loop approval gate, full CI/CD pipeline, and live deployment.
 
+[![CI/CD](https://github.com/SohamBirlaa/News-Letter-Agent---LangGraph-LangChain/actions/workflows/test.yml/badge.svg)](https://github.com/SohamBirlaa/News-Letter-Agent---LangGraph-LangChain/actions)
+[![Docker](https://img.shields.io/badge/docker-sohambirlaa%2Fnewsletter--agent-blue)](https://hub.docker.com/r/sohambirlaa/newsletter-agent)
+[![Live](https://img.shields.io/badge/live-render.com-brightgreen)](https://news-letter-agent-langgraph-langchain.onrender.com)
+
+**🌐 Live Demo:** [https://news-letter-agent-langgraph-langchain.onrender.com](https://news-letter-agent-langgraph-langchain.onrender.com)
+
+---
 
 ## 🎯 What It Does
 
@@ -58,9 +65,10 @@ Run Agent  →  planner → research → summarize → write → critic
                                                               ↓
                                               interrupt_before=['human_review']
                                               Graph PAUSES → saves state to MemorySaver
+                                              thread_id stored in Flask session
                                               Draft returned to browser
                                                               ↓
-                                              User clicks Approve
+                                              User reads draft → clicks Approve
                                                               ↓
                                               resume(thread_id) → input=None
                                               LangGraph loads checkpoint → resumes
@@ -73,16 +81,27 @@ Run Agent  →  planner → research → summarize → write → critic
 
 ```
 newsletter-agent/
-├── agent.py          # LangGraph pipeline — all 7 nodes + state
-├── app.py            # Flask REST API — 5 endpoints
-├── tools.py          # Tavily search + file save tools
-├── prompts.py        # All LLM prompt templates
-├── database.py       # SQLite wrapper (init, save, fetch)
+├── agent.py                    # LangGraph pipeline — all 7 nodes + state
+├── app.py                      # Flask REST API — 5 endpoints
+├── tools.py                    # Tavily search + file save tools
+├── prompts.py                  # All LLM prompt templates
+├── database.py                 # SQLite wrapper (init, save, fetch)
 ├── templates/
-│   └── index.html    # Browser UI
-├── newsletter.md     # Output — generated newsletter
-├── requirements.txt
-└── README.md
+│   └── index.html              # Browser UI
+├── tests/
+│   ├── conftest.py             # Shared fixtures + env setup
+│   ├── test_unit.py            # 55 unit + integration tests
+│   └── test_e2e.py             # 22 Selenium E2E tests
+├── Dockerfile                  # Container definition
+├── .dockerignore               # Clean image config
+├── render.yaml                 # Render.com deployment config
+├── pyproject.toml              # pytest config
+├── .env.example                # Environment variable reference
+├── .github/
+│   └── workflows/
+│       └── test.yml            # GitHub Actions CI/CD pipeline
+├── newsletter.md               # Output — generated newsletter
+└── requirements.txt
 ```
 
 ---
@@ -92,7 +111,7 @@ newsletter-agent/
 ### Prerequisites
 
 - Python 3.10+
-- [Ollama](https://ollama.com) installed with `llama3.2` pulled
+- Groq API key — free at [console.groq.com](https://console.groq.com)
 - Tavily API key — free at [tavily.com](https://tavily.com)
 
 ### Installation
@@ -102,29 +121,95 @@ newsletter-agent/
 git clone https://github.com/SohamBirlaa/News-Letter-Agent---LangGraph-LangChain.git
 cd newsletter-agent
 
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate       # Windows
+source venv/bin/activate    # Mac/Linux
+
 # Install dependencies
 pip install -r requirements.txt
-
-# Pull the local LLM
-ollama pull llama3.2
 ```
 
 ### Configuration
 
-Create a `.env` file in the root:
+Create a `.env` file in the root (see `.env.example`):
 
 ```env
-TAVILY_API_KEY=your_tavily_key_here
-FLASK_SECRET_KEY=any_random_string
+GROQ_API_KEY=your_groq_api_key_here
+TAVILY_AP_KEY=your_tavily_api_key_here
 ```
 
-### Run
+### Run Locally
 
 ```bash
 python app.py
 ```
 
 Open `http://localhost:5000` in your browser.
+
+### Run with Docker
+
+```bash
+# Pull from Docker Hub
+docker pull sohambirlaa/newsletter-agent:latest
+
+# Run with environment variables
+docker run -p 5000:5000 \
+  -e GROQ_API_KEY=your_key \
+  -e TAVILY_AP_KEY=your_key \
+  sohambirlaa/newsletter-agent:latest
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Install test dependencies
+pip install pytest selenium webdriver-manager
+
+# Unit + integration tests (no server needed)
+pytest tests/test_unit.py -v
+
+# E2E tests (requires: python app.py running)
+pytest tests/test_e2e.py -v
+
+# Full suite
+pytest -v
+```
+
+### Test Coverage
+
+| Section | Tests | Status |
+|---------|-------|--------|
+| Agent nodes (planner, research, summarize, write, critic, human_review, send) | 21 | ✅ |
+| review_router() conditional logic | 4 | ✅ |
+| safe_llm_call() helper | 4 | ✅ |
+| Database functions | 8 | ✅ |
+| Tools (Tavily + file save) | 5 | ✅ |
+| Flask API endpoints | 13 | ✅ |
+| Selenium E2E browser tests | 22 | ✅ |
+| **Total** | **77** | **✅ 77/77** |
+
+---
+
+## 🔁 CI/CD Pipeline
+
+Every push to `main` triggers:
+
+```
+git push
+    ↓
+GitHub Actions
+    ↓
+Job 1: Run 55 unit tests
+    ↓ (pass hone par)
+Job 2: Build Docker image → push to Docker Hub
+    ↓
+Render.com auto-deploys
+    ↓
+Live at onrender.com 🎉
+```
 
 ---
 
@@ -146,9 +231,7 @@ Open `http://localhost:5000` in your browser.
 | Mode | Behaviour |
 |------|-----------|
 | `human` | Agent pauses before publishing — waits for approval |
-| `auto` | Fully autonomous — no approval needed, publishes directly |
-
-Pass `mode` in the `/run-agent` request body. Default is `human`.
+| `auto` | Fully autonomous — publishes directly |
 
 ---
 
@@ -157,11 +240,15 @@ Pass `mode` in the `/run-agent` request body. Default is `human`.
 | Layer | Technology |
 |-------|-----------|
 | Agent Orchestration | LangGraph |
-| LLM | Ollama (llama3.2) — runs locally, no API cost |
+| LLM | Groq API (llama-3.3-70b-versatile) — free, fast |
 | Web Search | Tavily |
-| Backend | Flask |
+| Backend | Flask + Gunicorn |
 | Database | SQLite |
 | Frontend | HTML + CSS + Vanilla JS |
+| Testing | pytest + Selenium |
+| Containerization | Docker |
+| CI/CD | GitHub Actions |
+| Deployment | Render.com |
 
 ---
 
@@ -178,17 +265,22 @@ CREATE TABLE newsletters (
 
 ---
 
-## ✅ Assignment Requirements Checklist
+## ✅ Features Checklist
 
-| Requirement | Status |
-|-------------|--------|
-| Multi-step reasoning (plan → research → write → review → output) | ✅ 7-node pipeline |
-| Minimum 2–3 tools | ✅ Tavily search + LLM summarizer + newsletter file generator |
+| Feature | Status |
+|---------|--------|
+| Multi-step reasoning (plan → research → write → review → publish) | ✅ 7-node pipeline |
+| Minimum 2–3 tools | ✅ Tavily search + LLM + file generator |
 | Self-reflection / critique step | ✅ Dedicated `critic` node |
-| Single function call `run_newsletter_agent(goal)` | ✅ |
 | Human-in-the-Loop toggle | ✅ `human` / `auto` mode |
+| Pause & resume with thread_id | ✅ LangGraph MemorySaver + Flask session |
 | Simple frontend | ✅ Flask-served browser UI |
-| LangGraph or LangChain | ✅ LangGraph |
+| Newsletter history | ✅ SQLite + sidebar |
+| Unit + integration tests | ✅ 55 pytest tests |
+| E2E browser tests | ✅ 22 Selenium tests |
+| Dockerized | ✅ Docker Hub: sohambirlaa/newsletter-agent |
+| CI/CD pipeline | ✅ GitHub Actions |
+| Live deployment | ✅ Render.com |
 
 ---
 
